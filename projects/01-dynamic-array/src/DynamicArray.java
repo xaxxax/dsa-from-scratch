@@ -13,105 +13,154 @@
  */
 public class DynamicArray<E> implements List<E> {
 
-    // ---- Fields -------------------------------------------------------------
-    // TODO (M1): the backing array. Remember the generic-array idiom from Phase 0:
-    //            you cannot write `new E[n]`; use (E[]) new Object[n] with a
-    //            contained @SuppressWarnings("unchecked").
-    // private E[] data;
+    private E[] data;
+    private int length;
+    private static final int DEFAULT_CAPACITY = 15;
+    private static final int GROWTH_FACTOR = 2;
 
-    // TODO (M1): the number of elements currently in use. This is DISTINCT from
-    //            data.length. Conflating them is the #1 bug in this project.
-    // private int size;
+    // Default capacity of 15 can potentially lead to unneeded memory allocation, but with also exponentially lead to
+    // less unneeded copying, which is a bigger bottleneck to the memory than unneeded allocation.
+    // We also grow on a geometric sequence, with a growth factor of 2. So next allocation will be
+    // 30, 60, 120, 240, ... 
 
-    // TODO (M1): pick a default initial capacity and justify it (README §3 Q1).
-    // private static final int DEFAULT_CAPACITY = ?;
-
-
-    // ---- Constructors (M1) --------------------------------------------------
-
-    /** Create an empty list with the default initial capacity. */
+    @SuppressWarnings("unchecked")
     public DynamicArray() {
-        // TODO (M1): delegate to the capacity constructor with DEFAULT_CAPACITY,
-        //            or allocate directly. Set size = 0.
-        throw new UnsupportedOperationException("TODO M1: constructor");
+        this.data = (E[]) new Object[DEFAULT_CAPACITY];
+        this.length = 0;
     }
 
     /**
      * Create an empty list with the given initial capacity.
      * @throws IllegalArgumentException if initialCapacity < 1 (decide your policy)
      */
+    @SuppressWarnings("unchecked")
     public DynamicArray(int initialCapacity) {
-        // TODO (M1): validate input, allocate the backing array, set size = 0.
-        throw new UnsupportedOperationException("TODO M1: constructor(capacity)");
+        if (initialCapacity < 1) {
+            throw new IllegalArgumentException("Capacity cannot be less than 1.");
+        }
+
+        this.data = (E[]) new Object[initialCapacity];
+        this.length = 0;
     }
-
-
-    // ---- Core operations ----------------------------------------------------
 
     @Override
     public void add(E item) {
-        // TODO (M3): easy case — assume room exists: write at index `size`, size++.
-        // TODO (M5): before writing, if size == data.length, call resize().
-        throw new UnsupportedOperationException("TODO M3/M5: add");
+
+        if(size() == capacity()) {
+            resize();
+        }
+
+        this.data[size()] = item;
+        length++;
     }
 
     @Override
     public E get(int index) {
-        // TODO (M4): bounds-check (valid range is 0..size-1), then return data[index].
-        throw new UnsupportedOperationException("TODO M4: get");
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for " + size());
+        }
+
+        return data[index];
     }
 
     @Override
     public E set(int index, E item) {
-        // TODO (M6): bounds-check, save old value, overwrite, return old value.
-        throw new UnsupportedOperationException("TODO M6: set");
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for " + size());
+        }
+
+        E valueToOverwrite = data[index];
+
+        data[index] = item;
+
+        return valueToOverwrite;
     }
 
     @Override
     public E remove(int index) {
-        // TODO (M7): bounds-check; save the value to return; shift the tail left;
-        //            decrement size; null the now-vacated last slot (README FAQ).
-        throw new UnsupportedOperationException("TODO M7: remove");
+        if (index < 0 || index >= size()) {
+            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for " + size());
+        }
+
+        E valueToDelete = data[index];
+
+        for (int i = index; i < size() - 1; i++){
+            data[i] = data[i + 1];
+        }
+
+        data[size() - 1] = null;
+        length--;
+
+        return valueToDelete;
     }
 
     @Override
     public boolean contains(E item) {
-        // TODO (M8): linear scan over 0..size-1. Be null-safe in the comparison.
-        throw new UnsupportedOperationException("TODO M8: contains");
+        for(int i = 0; i < size(); i++){
+            if (item == null){
+                if (data[i] == null) return true;
+            }
+
+            else if(item.equals(data[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
+    /* Size returns the number of elements in the array, with "length" being the variable
+       This is not the same as data.length, as data.length will return the capacity of the given array.
+       See below method for difference. */
     @Override
     public int size() {
-        // TODO (M2): return the count of elements in use.
-        throw new UnsupportedOperationException("TODO M2: size");
+        return length;
     }
-
-
-    // ---- Growth (M5) --------------------------------------------------------
-
-    /**
-     * Grow the backing array so there is room for more elements.
-     * Decide your growth factor (README §3 Q2) — and be ready to defend why
-     * doubling beats adding a constant (README §6).
-     */
-    private void resize() {
-        // TODO (M5): allocate a larger array, copy 0..size-1 across, reassign data.
-        throw new UnsupportedOperationException("TODO M5: resize");
-    }
-
-
-    // ---- Stretch ------------------------------------------------------------
 
     @Override
-    public void add(int index, E item) {
-        // TODO (M10, optional): validate 0..size; resize if full; shift right; insert.
-        throw new UnsupportedOperationException("TODO M10: add(index, item)");
+    public int capacity() {
+        return data.length;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void resize() {
+        int currentCapacity = this.capacity();
+
+        E[] newArray = (E[]) new Object[currentCapacity * GROWTH_FACTOR];
+
+        for (int i = 0; i < size(); i++){
+            newArray[i] = data[i];
+        }
+
+        this.data = newArray;
+    }
+
+    @Override
+    public void insert(int index, E item) {
+        if (index < 0 || index > size()) {
+            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for " + size());
+        }
+
+        if(size() == capacity()) {
+            resize();
+        }
+
+        for(int i = size() - 1; i >= index; i--) {
+           data[i + 1] = data[i];
+        }
+
+        data[index] = item;
+        length++;
     }
 
     @Override
     public String toString() {
-        // TODO (M9): produce "[a, b, c]". Implement this early — it makes every
-        //            other bug visible.
-        return super.toString();
+        StringBuilder sb = new StringBuilder("[");
+
+        for (int i = 0; i < size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(data[i]);
+        }
+        sb.append("]");
+        return sb.toString();
     }
 }

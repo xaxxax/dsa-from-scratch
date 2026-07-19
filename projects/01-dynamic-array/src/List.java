@@ -18,7 +18,7 @@ public interface List<E> {
      * Valid index range: 0..size (inclusive of size == append).
      * (Stretch milestone M10 — you may leave this unimplemented at first.)
      */
-    void add(int index, E item);
+    void insert(int index, E item);
 
     /** Return the element at index. Throws IndexOutOfBoundsException if invalid. */
     E get(int index);
@@ -37,6 +37,9 @@ public interface List<E> {
 
     /** Linear search; true if an equal element is present. */
     boolean contains(E item);
+
+    /** Returns the current capacity */
+    int capacity();
 
     /**
      * True when there are no elements.
