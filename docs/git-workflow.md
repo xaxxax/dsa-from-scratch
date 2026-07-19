@@ -62,8 +62,8 @@ work together. The tag lets you jump back to "the day I finished project N."
 ```bash
 git status                  # what have I changed?
 git diff                    # review my own changes before committing
-git add projects/01-dynamic-array/src/DynamicArray.java
-git commit -m "feat(dynamic-array): implement remove(index)"
+git add projects/01-dynamic-array/src/dynamic_array.c
+git commit -m "feat(dynamic-array): implement da_remove(index)"
 ```
 
 **Review your own diff before every commit.** It's the cheapest code review you
@@ -89,22 +89,27 @@ better story than any résumé bullet.
 
 ## A .gitignore to start with
 
-Create `.gitignore` at the repo root:
+The repo root already has a `.gitignore` tuned for C. It covers:
 
 ```
-# compiled output
-out/
-bin/
-*.class
+# compiled output & test binaries
+out_test
+*.o
+*.out
+a.out
 
-# IDE
+# sanitizer / debugger artifacts
+*.dSYM/
+vgcore.*
+core
+
+# IDE / OS
 .idea/
-*.iml
 .vscode/
-
-# OS
 .DS_Store
 Thumbs.db
 ```
 
-You don't want compiled `.class` files in version control — only source.
+You don't want compiled binaries or object files in version control — only
+source. The per-project `make clean` removes `out_test`; the ignore rules are a
+safety net so a stray build never gets committed.

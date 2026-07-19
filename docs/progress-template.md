@@ -13,10 +13,12 @@
 ## Milestones
 
 - [ ] Read Motivation + Visualization, drew the diagram on paper
-- [ ] Designed classes/fields before reading the Design section
-- [ ] Constructor
+- [ ] Designed structs/fields + the memory lifecycle before reading Design
+- [ ] `xxx_new` / `xxx_free` (allocation AND cleanup)
 - [ ] ... (copy the milestone list from the project README)
 - [ ] Tests pass
+- [ ] **Memory audit clean** — `make test` (AddressSanitizer) + `valgrind
+      --leak-check=full` report zero errors and zero leaks
 - [ ] Code review done
 
 ---

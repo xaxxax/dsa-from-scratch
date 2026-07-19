@@ -57,8 +57,10 @@ Legend: ✅ = the operation this structure is *good* at. n = number of elements.
 - An array of `n` elements is `O(n)` space — but a *dynamic* array may hold up to
   ~2× that in spare capacity. That slack is the price of amortized O(1) appends.
 - A linked list of `n` nodes is `O(n)`, but with a **larger constant**: every
-  element also stores one (singly) or two (doubly) pointers plus object
-  overhead. This is why arrays are often faster *and* smaller in practice.
+  element also stores one (singly) or two (doubly) pointers plus per-node
+  allocator overhead (each `malloc` block carries bookkeeping). And the nodes are
+  scattered across the heap, so pointer-chasing stalls the CPU cache — this is why
+  arrays are often faster *and* smaller in practice, even at the same Big-O.
 - Recursion costs stack space: a recursive traversal of a tree of height `h`
   uses `O(h)` stack frames. For a balanced tree that's `O(log n)`; for a
   degenerate one it's `O(n)` — and can blow the call stack.

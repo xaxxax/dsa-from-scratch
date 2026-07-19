@@ -15,7 +15,7 @@ For every data structure, run this loop:
    └────┬────┘
         ▼
    ┌─────────┐
-   │ DESIGN  │  Decide classes, fields, method signatures. Still no bodies.
+   │ DESIGN  │  Decide structs, fields, function signatures. Still no bodies.
    └────┬────┘
         ▼
    ┌─────────┐
@@ -27,8 +27,8 @@ For every data structure, run this loop:
    └────┬────┘
         ▼
    ┌─────────┐
-   │  BREAK  │  Feed it edge cases until it fails. Empty? Full? Null? Huge?
-   └────┬────┘
+   │  BREAK  │  Feed it edge cases until it fails. Empty? Full? Huge? Then run
+   └────┬────┘  it under AddressSanitizer + valgrind — a leak IS a failure.
         ▼
    ┌─────────┐
    │ EXPLAIN │  Say out loud why it works and what it costs. If you can't,
@@ -40,6 +40,15 @@ For every data structure, run this loop:
 The two steps people skip are **DRAW** and **EXPLAIN**. They are the two that
 matter most. Skipping them is how you end up "understanding" a structure you
 can't actually reproduce.
+
+### The memory dimension (new in C)
+
+This course is in **C**, so every structure has a fifth question the garbage
+collector used to answer for you: **who frees this, and when?** Fold it into the
+loop — during DESIGN decide the lifecycle (`xxx_new` / `xxx_free`, who owns what);
+during BUILD write the `free` alongside the `new`; during BREAK prove it with
+`make test` (AddressSanitizer) and `valgrind --leak-check=full`. A structure that
+works but leaks is not done. Owning memory *is* half of what this course teaches.
 
 ---
 
@@ -71,7 +80,7 @@ Every project README has the same spine. Here's what each section is *for*:
 |---------|------------------------------|
 | 1. Motivation | *Why this exists.* The problem that made someone invent it. |
 | 2. Visualization | *The mental model.* Pictures you must be able to redraw. |
-| 3. Design | *Decomposition.* Turning an idea into classes and fields. |
+| 3. Design | *Decomposition.* Turning an idea into structs, fields, and a memory lifecycle. |
 | 4. Milestones | *Incremental construction.* How pros avoid big-bang failure. |
 | 5. Testing | *Verification & edge-case thinking.* |
 | 6. Complexity | *Cost reasoning.* The heart of the CS, not the coding. |
@@ -87,10 +96,15 @@ Every project README has the same spine. Here's what each section is *for*:
    actual state vs. what you expected?
 3. **Shrink the input.** Reproduce the bug with the smallest possible case.
 4. **Check the boundaries.** Off-by-one (`<` vs `<=`), empty, single-element,
-   full-capacity, first index, last index.
-5. **Rubber-duck it.** Explain the method line by line to an object on your
+   full-capacity, first index, last index, and the `size_t` unsigned trap
+   (a "negative" index arrives as a huge positive number).
+5. **Run the sanitizer.** `make test` builds with AddressSanitizer + UBSan; its
+   report names the exact line of a bad read/write/free. For leaks,
+   `valgrind --leak-check=full ./out_test` names the `malloc` you forgot to free.
+   These tools are not noise — they're the answer.
+6. **Rubber-duck it.** Explain the function line by line to an object on your
    desk. The bug usually surfaces mid-sentence.
-6. *Then* ask for a hint.
+7. *Then* ask for a hint.
 
 ---
 
