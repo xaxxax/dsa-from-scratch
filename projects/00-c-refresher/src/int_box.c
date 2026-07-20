@@ -22,52 +22,69 @@ typedef struct {
     size_t capacity;  /* how many ints data can hold (fixed for this warm-up) */
 } IntBox;
 
-/* Allocate the struct AND its backing array. Decide your policy for capacity 0
- * (return NULL? assert?) and document it. Remember: TWO allocations here. */
+// these are needed to be put here because the C compiler only allows
+// functions called when they are after other functions
+// i.e is_full(), then size(), if trying to call size() inside of is_full()
+// this will throw a implicit function declaratio error
+IntBox *box_new(size_t capacity); 
+void box_free(IntBox *b);
+int box_push(IntBox *b, int value);
+int box_get(const IntBox *b, size_t index);
+size_t box_size(const IntBox *b);
+int box_is_full(const IntBox *b);
+
 IntBox *box_new(size_t capacity) {
-    (void)capacity;
-    /* TODO: malloc the IntBox; malloc the data array of `capacity` ints;
-     *       initialize size = 0; return the box (or NULL on failure). */
-    assert(0 && "TODO: implement box_new");
-    return NULL;
+    if(capacity == 0) return NULL; // unsigned integer so we do not care about c < 0 (neg not possible)
+
+    IntBox *box = malloc(sizeof(IntBox));
+    if(!box) return NULL; // malloc may return NULL (0) if no memory assignable
+                          // if we no check, and do box->data (data[0]) this will try 
+                          // and assign data to address 0, which is 'null pointer dereference' and progrem segfaults 
+
+    box->data = malloc(capacity * sizeof(int)); // follow the box pointer, and access data field inside that struct (this.data)
+    if(!box->data) {
+      free(box); // if true, then need to free alocated memory for box
+      return NULL; // same as above malloc    
+    }
+    
+    box->size = 0;
+    box->capacity = capacity;
+
+    return box;
 }
 
-/* Free everything you allocated, in the right order. Why must you free `data`
- * BEFORE `b` itself? (Hint: once b is freed, you can't reach b->data.) */
 void box_free(IntBox *b) {
-    (void)b;
-    /* TODO: free(b->data); then free(b);  (guard against b == NULL) */
-    assert(0 && "TODO: implement box_free");
+    if(!b) return; // 'return NULL' fails because NULL is the same as 0, which is not of void return type
+    
+    free(b->data);
+    free(b);
 }
 
-/* Append value. Return 0 on success, non-zero if the box is already full. */
 int box_push(IntBox *b, int value) {
-    (void)b; (void)value;
-    /* TODO: if full, return non-zero; else data[size] = value; size++; return 0 */
-    assert(0 && "TODO: implement box_push");
+    if(box_is_full(b)) return -1;
+    int index = box_size(b); // size starts at 0, so if length (size) is 1
+                             // that means something is at index 0, so next index to push is at 1
+                             // could probably just use b->size instead of index, but index reads cleaner? 
+    b->data[index] = value;
+    b->size++;
+
     return 0;
 }
 
-/* Read the value at index. This is a PROGRAMMER-error check — use assert. */
 int box_get(const IntBox *b, size_t index) {
-    (void)b; (void)index;
-    /* TODO: assert(index < b->size); return b->data[index]; */
-    assert(0 && "TODO: implement box_get");
-    return 0;
+    assert(index <= b->size);
+    
+    return b->data[index];
 }
 
 size_t box_size(const IntBox *b) {
-    (void)b;
-    /* TODO: return b->size; */
-    assert(0 && "TODO: implement box_size");
-    return 0;
+    assert(b != NULL);
+    return b->size;
 }
 
 int box_is_full(const IntBox *b) {
-    (void)b;
-    /* TODO: return b->size == b->capacity; */
-    assert(0 && "TODO: implement box_is_full");
-    return 0;
+    if(!b) return -1;
+    return b->size == b->capacity;
 }
 
 int main(void) {
