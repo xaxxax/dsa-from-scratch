@@ -155,6 +155,70 @@ int main(void) {
     CHECK_INT(198, da_get(big, 99),  "large buffer: last element intact (no overflow)");
     da_free(big);
 
+    /* ====================================================================== */
+    /* EXT: da_insert — shift-right insertion at an arbitrary index           */
+    /* ====================================================================== */
+
+    /* insert in the MIDDLE: [10,20,30] + insert(99 @1) -> [10,99,20,30] */
+    DynamicArray *ins = da_new();
+    da_add(ins, 10); da_add(ins, 20); da_add(ins, 30);
+    da_insert(ins, 99, 1);
+    CHECK_INT(4,  da_size(ins),  "insert(mid): size grows by 1");
+    CHECK_INT(10, da_get(ins, 0), "insert(mid): head unchanged");
+    CHECK_INT(99, da_get(ins, 1), "insert(mid): new item landed at index 1");
+    CHECK_INT(20, da_get(ins, 2), "insert(mid): old index-1 shifted right");
+    CHECK_INT(30, da_get(ins, 3), "insert(mid): tail shifted right");
+
+    /* insert at the FRONT (index 0): [10,99,20,30] + insert(5 @0) -> [5,...] */
+    da_insert(ins, 5, 0);
+    CHECK_INT(5,  da_size(ins),  "insert(front): size grows by 1");
+    CHECK_INT(5,  da_get(ins, 0), "insert(front): new item at index 0");
+    CHECK_INT(10, da_get(ins, 1), "insert(front): everything shifted right");
+    CHECK_INT(30, da_get(ins, 4), "insert(front): last element still last");
+
+    /* insert at the END (index == size): appends */
+    da_insert(ins, 7, da_size(ins));
+    CHECK_INT(6, da_size(ins),  "insert(end): size grows by 1");
+    CHECK_INT(7, da_get(ins, 5), "insert(end): new item is the last element");
+    CHECK_INT(5, da_get(ins, 0), "insert(end): head untouched");
+    da_free(ins);
+
+    /* insert into an EMPTY list at index 0 */
+    DynamicArray *ie = da_new();
+    da_insert(ie, 42, 0);
+    CHECK_INT(1,  da_size(ie),  "insert into empty: size is 1");
+    CHECK_INT(42, da_get(ie, 0), "insert into empty: value is retrievable");
+    da_free(ie);
+
+    /* insert the value 0 (int element, not a pointer — 0 is legal data) */
+    DynamicArray *iz = da_new();
+    da_add(iz, 1); da_add(iz, 2);
+    da_insert(iz, 0, 1);                 /* [1,2] -> [1,0,2] */
+    CHECK_INT(3, da_size(iz),   "insert 0: size grows by 1");
+    CHECK_INT(0, da_get(iz, 1), "insert 0: the value 0 is stored, not rejected");
+    CHECK_INT(2, da_get(iz, 2), "insert 0: following element shifted right");
+    da_free(iz);
+
+    /* insert that forces a GROW: fill to capacity, then insert one more */
+    DynamicArray *ig = da_with_capacity(2);
+    da_add(ig, 100); da_add(ig, 200);   /* size == capacity == 2 */
+    da_insert(ig, 150, 1);              /* [100,200] -> [100,150,200], must grow */
+    CHECK_INT(3,   da_size(ig),     "insert-triggers-grow: size is 3");
+    CHECK(da_capacity(ig) >= 3,     "insert-triggers-grow: capacity expanded");
+    CHECK_INT(100, da_get(ig, 0),   "insert-triggers-grow: get(0) == 100");
+    CHECK_INT(150, da_get(ig, 1),   "insert-triggers-grow: get(1) == 150");
+    CHECK_INT(200, da_get(ig, 2),   "insert-triggers-grow: get(2) == 200 (survived realloc)");
+    da_free(ig);
+
+    /* repeated FRONT inserts build a reversed sequence: 1,2,3,4,5 @0 -> [5,4,3,2,1] */
+    DynamicArray *ir = da_new();
+    for (da_elem v = 1; v <= 5; v++) da_insert(ir, v, 0);
+    CHECK_INT(5, da_size(ir),  "repeated front insert: size is 5");
+    CHECK_INT(5, da_get(ir, 0), "repeated front insert: newest is first");
+    CHECK_INT(4, da_get(ir, 1), "repeated front insert: order is reversed");
+    CHECK_INT(1, da_get(ir, 4), "repeated front insert: oldest is last");
+    da_free(ir);
+
     /* ---------------------------------------------------------------------- */
     /* NOT TESTED HERE — abort paths.                                         */
     /*   da_get(a, (size_t)-1), da_get on an out-of-range index, etc. trip an  */

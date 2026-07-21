@@ -58,5 +58,5 @@ int     da_contains(const DynamicArray *a, da_elem item);   /* 1 if present, els
 size_t  da_size(const DynamicArray *a);
 size_t  da_capacity(const DynamicArray *a);
 int     da_is_empty(const DynamicArray *a);                 /* 1 if size == 0 */
-
+void    da_insert(DynamicArray *a, da_elem item, size_t index); /* insert element at index */
 #endif /* DYNAMIC_ARRAY_H */

@@ -117,7 +117,7 @@ da_elem da_remove(DynamicArray *a, size_t index) {
     }
     
     //a->data[a->size - 1] = NULL; // possible to not have this, as when size shrinks the array will become one less
-                                 // since we do not allow index >= size, it will never be accessible 
+                                   // since we do not allow index >= size, it will never be accessible 
     a->size--;  
 
     return remove_elem;
@@ -129,4 +129,17 @@ int da_contains(const DynamicArray *a, da_elem item) {
       if(a->data[i] == item) return 1;
     }
     return 0;
+}
+
+void da_insert(DynamicArray *a, da_elem item, size_t index) {
+  assert(a != NULL);
+  
+  if(a->size == a->capacity) da_grow(a);
+
+  for(size_t i = a->size; i > index; i--) {
+    a->data[i] = a->data[i - 1];
+  }
+  
+  a->size++;
+  a->data[index] = item;
 }
