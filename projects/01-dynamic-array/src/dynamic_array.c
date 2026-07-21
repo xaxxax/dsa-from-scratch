@@ -23,117 +23,110 @@
 #define DA_DEFAULT_CAPACITY 8
 #define DA_GROWTH_FACTOR    2
 
-/* ------------------------------------------------------------------ M1 ---- */
-
 DynamicArray *da_new(void) {
-    /* TODO (M1): implement in terms of da_with_capacity(DA_DEFAULT_CAPACITY). */
-    assert(0 && "TODO: implement da_new (README M1)");
-    return NULL;
+   return da_with_capacity(DA_DEFAULT_CAPACITY); 
 }
 
 DynamicArray *da_with_capacity(size_t initial_capacity) {
-    (void)initial_capacity;
-    /* TODO (M1):
-     *   - decide + enforce your policy for initial_capacity == 0
-     *   - malloc the DynamicArray struct  (check for NULL)
-     *   - malloc the backing buffer of `initial_capacity` da_elem  (check for NULL;
-     *     if it fails, don't leak the struct)
-     *   - set size = 0, capacity = initial_capacity
-     *   - return the struct
-     */
-    assert(0 && "TODO: implement da_with_capacity (README M1)");
-    return NULL;
+    if(initial_capacity == 0) initial_capacity = DA_DEFAULT_CAPACITY;
+
+    DynamicArray *da = malloc(sizeof(DynamicArray)); // create DA with size of (data + size + capacity)
+    
+    if(!da) return NULL;
+
+    da->data = malloc(initial_capacity * sizeof(da_elem));
+
+    if(!da->data) {
+      free(da);
+      return NULL;
+    } 
+
+    da->size = 0;
+    da->capacity = initial_capacity;
+
+    return da;
 }
 
 void da_free(DynamicArray *a) {
-    (void)a;
-    /* TODO (M1): if a is NULL, do nothing. Otherwise free(a->data), then free(a).
-     * Why that order? Once you free(a), you can no longer read a->data. */
-    assert(0 && "TODO: implement da_free (README M1)");
+    if(!a) return;  
+
+    free(a->data);
+    free(a);
 }
 
-/* ------------------------------------------------------------------ M2 ---- */
-
 size_t da_size(const DynamicArray *a) {
-    (void)a;
-    assert(0 && "TODO: implement da_size (README M2)");
-    return 0;
+    assert(a != NULL);
+    return a->size;
 }
 
 size_t da_capacity(const DynamicArray *a) {
-    (void)a;
-    assert(0 && "TODO: implement da_capacity (README M2)");
-    return 0;
+    assert(a != NULL);
+    return a->capacity;
 }
 
 int da_is_empty(const DynamicArray *a) {
-    (void)a;
-    assert(0 && "TODO: implement da_is_empty (README M2)");
-    return 0;
+    assert(a != NULL);
+
+    return a->size == 0;
 }
 
-/* ------------------------------------------------------------ M5 (helper) -- */
-
-/* Grow the backing buffer (usually to capacity * DA_GROWTH_FACTOR). Private:
- * declared `static` so it's not part of the public API. Handle realloc failure
- * and the fact that realloc MAY return a different address.
- *
- * Until M5, nothing calls this, so the compiler warns "defined but not used" —
- * that's expected dead-code feedback; it disappears once da_add calls it. */
 static void da_grow(DynamicArray *a) {
-    (void)a;
-    /* TODO (M5):
-     *   size_t new_cap = a->capacity * DA_GROWTH_FACTOR;  (careful if capacity is 0)
-     *   da_elem *bigger = realloc(a->data, new_cap * sizeof *a->data);
-     *   if (bigger == NULL) { handle failure — a->data is still valid }
-     *   a->data = bigger; a->capacity = new_cap;
-     */
-    assert(0 && "TODO: implement da_grow (README M5)");
-}
+    assert(a != NULL);  
 
-/* ------------------------------------------------------------ M3, M5 ------ */
+    // capacity should never be able to be 0 because we set it to DA_DEFAULT_CAPACITY when a user passes in capacity as 0
+    size_t new_cap = a->capacity * DA_GROWTH_FACTOR; // take current capacity and grow it by previously decided DA_GROWTH_FACTOR
+    
+    da_elem *new_data = realloc(a->data, new_cap * sizeof(da_elem));
+    if(!new_data) return;
+
+    a->data = new_data;
+    a->capacity = new_cap;
+}
 
 void da_add(DynamicArray *a, da_elem item) {
-    (void)a; (void)item;
-    /* TODO (M3 easy case): write data[size] = item; size++
-     * TODO (M5): first, if size == capacity, da_grow(a); THEN write. */
-    assert(0 && "TODO: implement da_add (README M3/M5)");
+    assert(a != NULL);
+    
+    if(a->size == a->capacity) da_grow(a);
+    
+    a->data[a->size] = item;
+    a->size++;
 }
-
-/* ------------------------------------------------------------------ M4 ---- */
 
 da_elem da_get(const DynamicArray *a, size_t index) {
-    (void)a; (void)index;
-    /* TODO (M4): bounds-check with `index >= a->size` (see the unsigned trap),
-     * then return a->data[index]. */
-    assert(0 && "TODO: implement da_get (README M4)");
-    return 0;
+    assert(a != NULL && index < a->size);  
+    return a->data[index];
 }
-
-/* ------------------------------------------------------------------ M6 ---- */
 
 da_elem da_set(DynamicArray *a, size_t index, da_elem item) {
-    (void)a; (void)index; (void)item;
-    /* TODO (M6): bounds-check, save old = data[index], write item, return old. */
-    assert(0 && "TODO: implement da_set (README M6)");
-    return 0;
-}
+    assert(a != NULL && index < a->size);
+    
+    da_elem old = a->data[index];
+    a->data[index] = item;
 
-/* ------------------------------------------------------------------ M7 ---- */
+    return old;
+}
 
 da_elem da_remove(DynamicArray *a, size_t index) {
-    (void)a; (void)index;
-    /* TODO (M7): bounds-check; save removed = data[index]; shift the tail left
-     * (data[i] = data[i+1] for i in index..size-2); size--; return removed. */
-    assert(0 && "TODO: implement da_remove (README M7)");
-    return 0;
+    assert(a != NULL && index < a->size);  
+    
+    da_elem remove_elem = a->data[index];
+      
+    // use loop and move everything left one
+    for (size_t i = index; i < a->size; i++) {
+      a->data[i] = a->data[i + 1];
+    }
+    
+    //a->data[a->size - 1] = NULL; // possible to not have this, as when size shrinks the array will become one less
+                                 // since we do not allow index >= size, it will never be accessible 
+    a->size--;  
+
+    return remove_elem;
 }
 
-/* ------------------------------------------------------------------ M8 ---- */
-
 int da_contains(const DynamicArray *a, da_elem item) {
-    (void)a; (void)item;
-    /* TODO (M8): linear scan 0..size-1; return 1 if an element equals item, else 0. */
-    assert(0 && "TODO: implement da_contains (README M8)");
+    assert(a != NULL);
+    for (size_t i = 0; i < a->size; i++) { // cannot be int type, must be same type for comparison with a->size
+      if(a->data[i] == item) return 1;
+    }
     return 0;
 }
